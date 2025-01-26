@@ -8,12 +8,15 @@ def main():
         return
     filePathName = sys.argv[1]
     pathList = pf.Paths(filePathName)
-    print(pathList.groundTruth)
+    fileHandler = ef.FileHandler()
     for file in pathList.groundTruth:
-        groundTruth = ef.file(file)
-    for file in pathList.sideRGB:
-        sideRGB = ef.file(file)
+        groundTruth = fileHandler.get_handler(file)
+    #for file in pathList.sideRGB:
+    #    sideRGB = ef.file(file)
+    #print(groundTruth.fileData)
 
+    for data in groundTruth.data:
+        data.printf()
 
 if __name__ == "__main__":
     main()
