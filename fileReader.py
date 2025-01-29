@@ -1,6 +1,8 @@
 import pandas as pd
 import scipy as sp
 import PIL as img
+import numpy as np
+import open3d as o3d
 import os
 
 class FileHandler:
@@ -27,34 +29,23 @@ class excel:
         self.filepath = filepath
         self.data = []
         self.file = pd.read_excel(filepath)
-        i=0
-        for index, row in self.file.iterrows():
-            i+=1
-            self.data.append(excelData(i,row['APPROVED FOR PUBLIC RELEASE'],row['Unnamed: 1'],row['Unnamed: 2'],row['Unnamed: 3']))
+    
 class csv:
     def __init__(self,filepath):
         self.filepath = filepath
         self.data = []
         self.file = pd.read_csv(filepath)
         i=0
-        for index, row in self.file.iterrows():
-            i+=1
-            self.data.append(excelData(i,row['APPROVED FOR PUBLIC RELEASE'],row['Unnamed: 1'],row['Unnamed: 2'],row['Unnamed: 3']))
+        #for index, row in self.file.iterrows():
+        #    i+=1
+        #    self.data.append(excelData(i,row['Unnamed: 0'],row['APPROVED FOR PUBLIC RELEASE'],row['Unnamed: 2'],row['Unnamed: 3']))
 
 class mat:
     def __init__(self,filepath):
         self.filepath = filepath
+        self.data = []
+        self.file = sp.io.loadmat(filepath)
 
 class png:
     def __init__(self,filepath):
         self.filepath = filepath
-
-class excelData:
-    def __init__(self,number,name,x,y,z):
-        self.number = number
-        self.name = name
-        self.x = x
-        self.y = y
-        self.z = z
-    def printf(self):
-        print(self.number, self.name, ": X",self.x, " Y", self.y, " Z", self.z)

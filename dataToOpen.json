@@ -1,0 +1,12 @@
+{
+    "0groundTruth": true,
+    "LWIR": true,
+    "RGB": true,
+    "RADAR": true,
+    "LIDAR": true,
+    "xStart" : 0,
+    "xEnd" : 30,
+    "yStart" : 0,
+    "yEnd" : 30,
+    "precision" : 0.1
+}

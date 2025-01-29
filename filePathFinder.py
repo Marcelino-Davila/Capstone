@@ -26,10 +26,10 @@ class Paths:
             path["LIDAR"] = path["LIDAR"].rstrip(" \n")
         self.groundTruth = get_full_paths(path["groundTruth"])
         self.downLWIR = get_full_paths(path["downLWIR"])
-        self.downRGB = get_full_paths(path["downLWIR"])
-        self.sideLWIR = get_full_paths(path["downLWIR"])
-        self.sideRGB = get_full_paths(path["downLWIR"])
-        self.LIDAR = get_full_paths(path["downLWIR"])
+        self.downRGB = get_full_paths(path["downRGB"])
+        self.sideLWIR = get_full_paths(path["sideLWIR"])
+        self.sideRGB = get_full_paths(path["sideRGB"])
+        self.LIDAR = get_full_paths(path["LIDAR"])
 
         
 
