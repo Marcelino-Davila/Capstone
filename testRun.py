@@ -7,19 +7,23 @@ fileReader = ef.FileHandler()
 #super class to reference all the files and stuff when running tests 
 class test:
     def __init__(self,parameters,filePaths):
-        self.groundTruth = fileReader.get_handler(filePaths.groundTruth[0])
-        self.sideRGBExcel = fileReader.get_handler(filePaths.sideRGB[0])
-        filePaths.sideRGB.remove(filePaths.sideRGB[0])
-        self.sideRGBImages = filePaths.sideRGB
-        self.sideLWIR = fileReader.get_handler(filePaths.sideLWIR[0])
-        filePaths.sideLWIR.remove(filePaths.sideLWIR[0])                                       
-        self.downRGB = fileReader.get_handler(filePaths.downRGB[0])
-        filePaths.downRGB.remove(filePaths.downRGB[0])
-        self.downLWIR = fileReader.get_handler(filePaths.downLWIR[0])
-        filePaths.downLWIR.remove(filePaths.downLWIR[0])
-        self.LIDARPointCloud = fileReader.get_handler(filePaths.LIDAR[0])
-        self.LIDARProfile = fileReader.get_handler(filePaths.LIDAR[1])
-        self.LIDARPng= fileReader.get_handler(filePaths.LIDAR[2])
+        if(parameters["0groundTruth"]):
+            self.groundTruth = fileReader.get_handler(filePaths.groundTruth[0])
+        if(parameters["RGB"]):
+            self.sideRGBExcel = fileReader.get_handler(filePaths.sideRGB[0])
+            filePaths.sideRGB.remove(filePaths.sideRGB[0])
+            self.sideRGBImages = filePaths.sideRGB
+            self.downRGB = fileReader.get_handler(filePaths.downRGB[0])
+            filePaths.downRGB.remove(filePaths.downRGB[0])
+        if(parameters["LWIR"]):
+            self.sideLWIR = fileReader.get_handler(filePaths.sideLWIR[0])
+            filePaths.sideLWIR.remove(filePaths.sideLWIR[0])                                       
+            self.downLWIR = fileReader.get_handler(filePaths.downLWIR[0])
+            filePaths.downLWIR.remove(filePaths.downLWIR[0])
+        if(parameters["LIDAR"]):
+            self.LIDARPointCloud = fileReader.get_handler(filePaths.LIDAR[0])
+            self.LIDARProfile = fileReader.get_handler(filePaths.LIDAR[1])
+            self.LIDARPng= fileReader.get_handler(filePaths.LIDAR[2])
         self.xStart = parameters["xStart"]
         self.yStart = parameters["yStart"]
         self.xEnd = parameters["xEnd"]
