@@ -2,7 +2,7 @@
     "0groundTruth": false,
     "LWIR": false,
     "RGB": false,
-    "RADAR": false,
+    "RADAR": true,
     "LIDAR": false,
     "xStart" : 0,
     "xEnd" : 30,

@@ -24,12 +24,18 @@ class Paths:
             path["sideRGB"] = path["sideRGB"].rstrip(" \n")
             path["LIDAR"] = file.readline()
             path["LIDAR"] = path["LIDAR"].rstrip(" \n")
+            path["RADARDown"] = file.readline()
+            path["RADARDown"] = path["RADARDown"].rstrip(" \n")
+            path["RADARSide"] = file.readline()
+            path["RADARSide"] = path["RADARSide"].rstrip(" \n")
         self.groundTruth = get_full_paths(path["groundTruth"])
         self.downLWIR = get_full_paths(path["downLWIR"])
         self.downRGB = get_full_paths(path["downRGB"])
         self.sideLWIR = get_full_paths(path["sideLWIR"])
         self.sideRGB = get_full_paths(path["sideRGB"])
         self.LIDAR = get_full_paths(path["LIDAR"])
+        self.RADARSide = get_full_paths(path["RADARSide"])
+        self.RADARDown = get_full_paths(path["RADARDown"])
 
         
 

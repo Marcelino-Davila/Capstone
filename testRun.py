@@ -1,5 +1,6 @@
 import open3d as o3d
 import fileReader as ef
+import scipy.io as sio
 
 fileReader = ef.FileHandler()
 
@@ -7,6 +8,7 @@ fileReader = ef.FileHandler()
 #super class to reference all the files and stuff when running tests 
 class test:
     def __init__(self,parameters,filePaths):
+        self.parameters = parameters
         if(parameters["0groundTruth"]):
             self.groundTruth = fileReader.get_handler(filePaths.groundTruth[0])
         if(parameters["RGB"]):
@@ -24,6 +26,12 @@ class test:
             self.LIDARPointCloud = fileReader.get_handler(filePaths.LIDAR[0])
             self.LIDARProfile = fileReader.get_handler(filePaths.LIDAR[1])
             self.LIDARPng= fileReader.get_handler(filePaths.LIDAR[2])
+        if(parameters["RADAR"]):
+
+            print()
+            self.RADARSide = fileReader.get_handler(filePaths.RADARSide[0])
+            self.RADARDown = fileReader.get_handler(filePaths.RADARDown[0])
+            self.RADARIMG = fileReader.get_handler(filePaths.RADARDown[1])
         self.xStart = parameters["xStart"]
         self.yStart = parameters["yStart"]
         self.xEnd = parameters["xEnd"]
@@ -33,7 +41,19 @@ class test:
         #for index, row in self.file.iterrows():
         #    i+=1
         #    self.data.append(excelData(i,row['APPROVED FOR PUBLIC RELEASE'],row['Unnamed: 1'],row['Unnamed: 2'],row['Unnamed: 3']))
-        
+    def runTest(self):
+        for hh, hv, vh, vv, ximg, xstrip, y, z in zip(self.RADARSide.file["img_hh"],
+                                                      self.RADARSide.file["img_hv"],
+                                                      self.RADARSide.file["img_vh"],
+                                                      self.RADARSide.file["img_vv"],
+                                                      self.RADARSide.file["x_img"],
+                                                      self.RADARSide.file["x_strip"],
+                                                      self.RADARSide.file["y_img"],
+                                                      self.RADARSide.file["z_img"]):
+            print("hh", hh, "hv", hv, "vh", vh, "vv", vv, "ximg", ximg, "xstrip", xstrip, "y", y, "z", z)
+        #for xlidar,ylidar,zlidar in zip(self.LIDARPointCloud.file["x_lidar"],self.LIDARPointCloud.file["y_lidar"],self.LIDARPointCloud.file["z_lidar"]):
+        #    if(zlidar>=1):
+        #        print("x",xlidar,"y",ylidar,"z",zlidar)
 
 class excelData:
     def __init__(self,ID,name,x,y,z):
