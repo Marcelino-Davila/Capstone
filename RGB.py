@@ -2,41 +2,46 @@ from skimage.color import deltaE_ciede2000, rgb2lab
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 
 def detectTarget(imageIn,x,y,imageSizeX,imageSizeY):
     image = removeShadow(imageIn)
     #split image to thirds for image averages
-    imageLeft = image[0:3000,0:500]
-    imageMiddle = image[0:3000,500:3596]
-    imageRight = image[0:3000,3596:4096]
-
+    
+    imWin = Window(x,y,imageSizeX,imageSizeY)
     smallIm = cv2.resize(image,(1000,1000),interpolation=cv2.INTER_AREA)
     cv2.imshow("small",smallIm)
-    imWin = Window(x,y,imageSizeX,imageSizeY)
     #calculating average for regions
-    avgLeft = cv2.mean(imageLeft)[:3] 
-    avgMid = cv2.mean(imageMiddle)[:3] 
-    avgRight = cv2.mean(imageRight)[:3]
+
     i=0
     targets = []
     while (imWin.scanning):
-
+        
         window = image[imWin.y1:imWin.y2,imWin.x1:imWin.x2] 
         avgWindowColor = cv2.mean(window)[:3]
-        cv2.imshow("window",window)
-
-        if(imWin.x1 < 500):
-            target, confidence = colorCompare(avgWindowColor,avgLeft)
-        elif(imWin.x1 > 3596):
-            target, confidence = colorCompare(avgWindowColor,avgRight)
-        else:
-            target, confidence = colorCompare(avgWindowColor,avgMid)
+        print("mean", avgWindowColor)
+        SX1 = imWin.x1 - 200
+        SX2 = imWin.x2 + 200
+        SY1 = imWin.y1 - 200
+        SY2 = imWin.y2 + 200
+        if(SX1 < 0):
+            SX1 = 0
+        if(SX2 > imageSizeX):
+            SX2 = imageSizeX
+        if(SY1 < 0):
+            SY1 = 0
+        if(SY2 > imageSizeY):
+            SY2 = imageSizeY
+        surroundingWindow = image[SY1:SY2,SX1:SX2]
+        background = back(surroundingWindow,imWin.x1,imWin.x2,imWin.y1,imWin.y2,SX2-imWin.x2,SY2-imWin.y2)
+        target, confidence = colorCompare(avgWindowColor, background)
 
         if(target):
             i+=1
-            print(f"FUCK THERES A BOMB {i}, x: {imWin.x1}, y: {imWin.y1}")
             targets.append(i)
+            cv2.imshow("background", surroundingWindow)
+            cv2.imshow("target",window)
             cv2.waitKey(0)
         imWin.increment()
 
@@ -44,15 +49,24 @@ def detectTarget(imageIn,x,y,imageSizeX,imageSizeY):
         return True
     return False
 
-
+def back(background,x1,x2,y1,y2,imgx,imgy):
+    top = cv2.mean(background[0:y1,x1:x2])
+    left = cv2.mean(background[0:imgy,0:x1])
+    bottom = cv2.mean(background[y2:imgy,x1:x2])
+    right = cv2.mean(background[0:imgy,x2:imgx])
+    average = [(top[0] + left[0] + bottom[0] + right[0])/4,
+               (top[1] + left[1] + bottom[1] + right[1])/4,
+               (top[2] + left[2] + bottom[2] + right[2])/4]
+    return average
+    
 def colorCompare(image,window):
     target = False
     lab1 = rgb2lab(np.array([[image]]) / 255.0)
     lab2 = rgb2lab(np.array([[window]]) / 255.0)
     difference = deltaE_ciede2000(lab1[0, 0], lab2[0, 0])
-    print(f"diff: {difference}")
-    if(difference> 35):
+    if(difference> 65):
         target = True
+    print("diff:", difference)
     return (target, difference)
 
 
@@ -104,9 +118,12 @@ image = cv2.imread(image_path)
 
 if image is None:
     raise ValueError("Error: Image not found. Check the file path.")
-target = detectTarget(image,50,50,4096,3000)
+startTime = time.time()
+target = detectTarget(image,75,75,4096,3000)
+endTime = time.time()
+print(f"total time: {endTime-startTime}")
 if(target):
-    print("BOMB BOMB BOMB BOMB")
+    print("Target")
 plt.show()
 cv2.waitKey(0)
 cv2.destroyAllWindows()
