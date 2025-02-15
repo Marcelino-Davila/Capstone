@@ -36,9 +36,9 @@ class csv:
         self.data = []
         self.file = pd.read_csv(filepath)
         i=0
-        #for index, row in self.file.iterrows():
-        #    i+=1
-        #    self.data.append(excelData(i,row['Unnamed: 0'],row['APPROVED FOR PUBLIC RELEASE'],row['Unnamed: 2'],row['Unnamed: 3']))
+        for index, row in self.file.iterrows():
+            i+=1
+            self.data.append((i,row['Unnamed: 0'],row['APPROVED FOR PUBLIC RELEASE'],row['Unnamed: 2'],row['Unnamed: 3']))
 
 class mat:
     def __init__(self,filepath):

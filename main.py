@@ -14,7 +14,7 @@ def main():
     filePathName = sys.argv[1]
     pathList = pf.Paths(filePathName)
     test = tst.test(running, pathList)
-    test.runTest()
+    #test.runTest()
     
 if __name__ == "__main__":
     main()

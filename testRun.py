@@ -1,6 +1,7 @@
 import open3d as o3d
 import fileReader as ef
 import scipy.io as sio
+import radar as rd
 
 fileReader = ef.FileHandler()
 
@@ -27,11 +28,11 @@ class test:
             self.LIDARProfile = fileReader.get_handler(filePaths.LIDAR[1])
             self.LIDARPng= fileReader.get_handler(filePaths.LIDAR[2])
         if(parameters["RADAR"]):
-
-            print()
-            self.RADARSide = fileReader.get_handler(filePaths.RADARSide[0])
-            self.RADARDown = fileReader.get_handler(filePaths.RADARDown[0])
-            self.RADARIMG = fileReader.get_handler(filePaths.RADARDown[1])
+            radarSide = rd.radar(filePaths.RADARSide[0])
+            radarSide.plot()
+            #self.RADARSide = fileReader.get_handler(filePaths.RADARSide[0])
+            #self.RADARDown = fileReader.get_handler(filePaths.RADARDown[0])
+            #self.RADARIMG = fileReader.get_handler(filePaths.RADARDown[1])
         self.xStart = parameters["xStart"]
         self.yStart = parameters["yStart"]
         self.xEnd = parameters["xEnd"]
