@@ -6,21 +6,16 @@ import time
 
 
 def detectTarget(imageIn,x,y,imageSizeX,imageSizeY):
-    image = removeShadow(imageIn)
-    #split image to thirds for image averages
-    
+    #image = removeShadow(imageIn)
+    image = imageIn
     imWin = Window(x,y,imageSizeX,imageSizeY)
-    smallIm = cv2.resize(image,(1000,1000),interpolation=cv2.INTER_AREA)
-    cv2.imshow("small",smallIm)
-    #calculating average for regions
-
     i=0
     targets = []
+    windowNumber = 0
     while (imWin.scanning):
-        
+        windowNumber+=1
         window = image[imWin.y1:imWin.y2,imWin.x1:imWin.x2] 
         avgWindowColor = cv2.mean(window)[:3]
-        print("mean", avgWindowColor)
         SX1 = imWin.x1 - 200
         SX2 = imWin.x2 + 200
         SY1 = imWin.y1 - 200
@@ -40,12 +35,9 @@ def detectTarget(imageIn,x,y,imageSizeX,imageSizeY):
         if(target):
             i+=1
             targets.append(i)
-            cv2.imshow("background", surroundingWindow)
-            cv2.imshow("target",window)
-            cv2.waitKey(0)
         imWin.increment()
-
-    if(len(targets)>3):
+    print("i")
+    if(len(targets)>0):
         return True
     return False
 
@@ -64,9 +56,8 @@ def colorCompare(image,window):
     lab1 = rgb2lab(np.array([[image]]) / 255.0)
     lab2 = rgb2lab(np.array([[window]]) / 255.0)
     difference = deltaE_ciede2000(lab1[0, 0], lab2[0, 0])
-    if(difference> 65):
+    if(difference> 70):
         target = True
-    print("diff:", difference)
     return (target, difference)
 
 
@@ -111,19 +102,3 @@ class Window:
         self.x1 += self.xInc
         self.x2 += self.xInc
 
-image_path = r"D:\capstoneRoot\data\ASPIRE_forDistro\1 Downlooking\RGB\image_2931079409.png"
-
-# Load the image
-image = cv2.imread(image_path)
-
-if image is None:
-    raise ValueError("Error: Image not found. Check the file path.")
-startTime = time.time()
-target = detectTarget(image,75,75,4096,3000)
-endTime = time.time()
-print(f"total time: {endTime-startTime}")
-if(target):
-    print("Target")
-plt.show()
-cv2.waitKey(0)
-cv2.destroyAllWindows()

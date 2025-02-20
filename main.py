@@ -1,6 +1,6 @@
-import fileReader as ef
+import code.fileReading.fileReader as ef
 import matplotlib.pyplot as plt
-import filePathFinder as pf
+import code.fileReading.filePathFinder as pf
 import sys
 import json
 import testRun as tst

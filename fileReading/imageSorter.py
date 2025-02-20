@@ -53,18 +53,18 @@ for image in imageDataDownRGB.data:
         xDownRGB = image[2]
         yDownRGB = image[3]
 imagesDownRGB.sort(key=lambda img: float(img.imageX))
-filtered_images = []
+filtered_imagesDownRGB = []
 prev_x, prev_y = None, None
 for image in imagesDownRGB:
     x, y = float(image.imageX), float(image.imageY)
     if prev_x is None or abs(x - prev_x) > 0.5 or abs(y - prev_y) > 0.5:
-        filtered_images.append(image)
+        filtered_imagesDownRGB.append(image)
         prev_x, prev_y = x, y
 
 with open(r"D:\capstoneRoot\code\usefulIamges\downlookingRGB.csv", mode="w", newline="") as file:
     file.truncate(0)
     writer = csv.writer(file)
-    for image in filtered_images:
+    for image in filtered_imagesDownRGB:
         writer.writerow([image.imagePath, image.imageX, image.imageY])
 #-------------------------------------------------------------------------------- SIDELOOKING RGB ------------------------------------------------------------------
 for image in imageDataSideRGB.data:
@@ -75,60 +75,62 @@ for image in imageDataSideRGB.data:
         xSideRGB = image[2]
         ySideRGB = image[3]
 imagesSideRGB.sort(key=lambda img: float(img.imageX))
-filtered_images = []
+filtered_imagesSideRGB = []
 prev_x, prev_y = None, None
-for image in imagesDownRGB:
+for image in imagesSideRGB:
     x, y = float(image.imageX), float(image.imageY)
     if prev_x is None or abs(x - prev_x) > 0.5 or abs(y - prev_y) > 0.5:
-        filtered_images.append(image)
+        filtered_imagesSideRGB.append(image)
         prev_x, prev_y = x, y
 
 with open(r"D:\capstoneRoot\code\usefulIamges\sidelookingRGB.csv", mode="w", newline="") as file:
     file.truncate(0)
     writer = csv.writer(file)
-    for image in filtered_images:
+    for image in filtered_imagesSideRGB:
         writer.writerow([image.imagePath, image.imageX, image.imageY])
 #-------------------------------------------------------------------------------- DOWNLOOKING LWIR ------------------------------------------------------------------
 for image in imageDataDownLWIR.data:
     if(image[0] > 16207):
         break
     if(abs(float(xDownLWIR)-float(image[2])) > 2) or (abs(float(yDownLWIR)-float(image[3])) > 2):
-        imagesDownLWIR.append(usefulImages(r"D:\capstoneRoot\data\ASPIRE_forDistro\1 Downlooking\LWIR\image_{}.png".format(image[1]),image[2],image[3]))
+        frame = str(image[1]).zfill(8)
+        imagesDownLWIR.append(usefulImages(r"D:\capstoneRoot\data\ASPIRE_forDistro\1 Downlooking\LWIR\image_{}.png".format(frame),image[2],image[3]))
         xDownLWIR = image[2]
         yDownLWIR = image[3]
 imagesDownLWIR.sort(key=lambda img: float(img.imageX))
-filtered_images = []
+filtered_imagesDownLWIR = []
 prev_x, prev_y = None, None
-for image in imagesDownRGB:
+for image in imagesDownLWIR:
     x, y = float(image.imageX), float(image.imageY)
     if prev_x is None or abs(x - prev_x) > 0.5 or abs(y - prev_y) > 0.5:
-        filtered_images.append(image)
+        filtered_imagesDownLWIR.append(image)
         prev_x, prev_y = x, y
 
 with open(r"D:\capstoneRoot\code\usefulIamges\downlookingLWIR.csv", mode="w", newline="") as file:
     file.truncate(0)
     writer = csv.writer(file)
-    for image in filtered_images:
+    for image in filtered_imagesDownLWIR:
         writer.writerow([image.imagePath, image.imageX, image.imageY])
 #-------------------------------------------------------------------------------- SIDELOOKING LWIR ------------------------------------------------------------------
 for image in imageDataSideLWIR.data:
     if(image[0] > 16207):
         break
     if(abs(float(xSideLWIR)-float(image[2])) > 2) or (abs(float(ySideRGB)-float(image[3])) > 2):
-        imagesSideLWIR.append(usefulImages(r"D:\capstoneRoot\data\ASPIRE_forDistro\2 Sidelooking\LWIR\image_{}.png".format(image[1]),image[2],image[3]))
+        frame = str(image[1]).zfill(8)
+        imagesSideLWIR.append(usefulImages(r"D:\capstoneRoot\data\ASPIRE_forDistro\2 Sidelooking\LWIR\image_{}.png".format(frame),image[2],image[3]))
         xSideLWIR = image[2]
         ySideLWIR = image[3]
 imagesSideLWIR.sort(key=lambda img: float(img.imageX))
-filtered_images = []
+filtered_imagesSideLWIR = []
 prev_x, prev_y = None, None
 for image in imagesSideLWIR:
     x, y = float(image.imageX), float(image.imageY)
     if prev_x is None or abs(x - prev_x) > 0.5 or abs(y - prev_y) > 0.5:
-        filtered_images.append(image)
+        filtered_imagesSideLWIR.append(image)
         prev_x, prev_y = x, y
 
 with open(r"D:\capstoneRoot\code\usefulIamges\sidelookingLWIR.csv", mode="w", newline="") as file:
     file.truncate(0)
     writer = csv.writer(file)
-    for image in filtered_images:
+    for image in filtered_imagesSideLWIR:
         writer.writerow([image.imagePath, image.imageX, image.imageY])

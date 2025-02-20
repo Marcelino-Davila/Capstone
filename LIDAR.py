@@ -1,152 +1,169 @@
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from sklearn.cluster import DBSCAN
-import scipy.io as sp
-from scipy.interpolate import griddata
-from scipy.interpolate import griddata
-
-
-def detectTarget(points):
-    # Convert to NumPy array and ensure it's (N, 3)
-    points = np.asarray(points, dtype=np.float64)
+from typing import Tuple, List, Optional
+from scipy.ndimage import gaussian_filter, label
+import csv
+class LidarProcessingPipeline:
+    def __init__(self, hdf5_file_path: str, 
+                 height_threshold: float = 0.5,
+                 smoothing_sigma: float = 1.0):
+        self.hdf5_file_path = hdf5_file_path
+        self.height_threshold = height_threshold
+        self.smoothing_sigma = smoothing_sigma
+        
+        # Initialize basic metadata
+        with h5py.File(self.hdf5_file_path, 'r') as f:
+            chunks_group = f['lidar_data/chunks']
+            self.num_chunks = chunks_group.attrs['num_chunks']
+            self.chunk_boundaries = chunks_group.attrs['chunk_boundaries']
     
-    if points.shape[1] != 3:
-        raise ValueError(f"Expected (N, 3) shape, got {points.shape}")
-
-    if points.shape[0] == 0:
-        print("Warning: Empty point cloud chunk. Skipping...")
-        return
-
-    # Create Open3D point cloud
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(points)
-
-    # Downsample the point cloud
-    pcd = pcd.voxel_down_sample(voxel_size=0.1)
-    points = np.asarray(pcd.points)  # Update points after downsampling
-
-    if points.shape[0] == 0:
-        print("Warning: No points after downsampling. Skipping...")
-        return
-
-    # Create grid for height map
-    resolution = 0.5
-    x_min, y_min = np.min(points[:, :2], axis=0)
-    x_max, y_max = np.max(points[:, :2], axis=0)
-
-    x_grid = np.arange(x_min, x_max, resolution)
-    y_grid = np.arange(y_min, y_max, resolution)
-    xx, yy = np.meshgrid(x_grid, y_grid)
-    grid_points = np.c_[xx.ravel(), yy.ravel()]
-
-    # Interpolate height values using KDTree
-    tree = KDTree(points[:, :2])
-    _, idx = tree.query(grid_points, k=1)
-    height_map = points[idx, 2].reshape(xx.shape)
-
-    # Normalize for edge detection
-    height_map_norm = cv2.normalize(height_map, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
-
-    # Apply Sobel edge detection
-    sobelx = cv2.Sobel(height_map_norm, cv2.CV_64F, 1, 0, ksize=5)
-    sobely = cv2.Sobel(height_map_norm, cv2.CV_64F, 0, 1, ksize=5)
-    edges = np.sqrt(sobelx**2 + sobely**2)
-
-    # Threshold edges
-    _, edges_binary = cv2.threshold(edges.astype(np.uint8), 30, 255, cv2.THRESH_BINARY)
-
-    # Display results
-    plt.figure(figsize=(8, 6))
-    plt.imshow(edges_binary, cmap="gray")
-    plt.title("Edge Detection Result")
-    plt.colorbar()
-    plt.show()
-
-
-
-
-lidarProfile = sp.loadmat(r"D:\capstoneRoot\data\ASPIRE_forDistro\3 LIDAR\lidar_profile_2024_07_31.mat")
-x_grid = lidarProfile['x_grid']
-y_grid = lidarProfile['y_grid']
-z_avg_grid = lidarProfile['z_avg_grid']
-# Open the HDF5 file
-with h5py.File(r"D:\capstoneRoot\code\chunkedLIDAR\lidarPCData.h5", "r") as hf:
-    # Initialize empty lists to store data
-    x_list, y_list, z_list = [], [], []
-
-    # Loop through chunks in order
-    for chunk_name in sorted(hf.keys(), key=lambda x: int(x.split("_")[-1])):  # Ensure chunks are in order
-        x_list.append(hf[chunk_name]["x"][:])  # Read and store
-        y_list.append(hf[chunk_name]["y"][:])
-        z_list.append(hf[chunk_name]["z"][:])
-
-    # Concatenate all chunks back into single arrays
-    x_lidar = np.concatenate(x_list)
-    y_lidar = np.concatenate(y_list)
-    z_lidar = np.concatenate(z_list)
-
+    def load_chunk(self, chunk_idx: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        with h5py.File(self.hdf5_file_path, 'r') as f:
+            lidar_group = f['lidar_data']
+            chunk_group = lidar_group['chunks'][f'chunk_{chunk_idx}']
+            
+            x_start = chunk_group.attrs['x_start']
+            x_end = chunk_group.attrs['x_end']
+            
+            x_coords = lidar_group['x_coordinates'][x_start:x_end]
+            y_coords = lidar_group['y_coordinates'][:]
+            elevation = chunk_group['elevation'][:]
+            
+            return x_coords, y_coords, elevation
     
-X, Y = np.meshgrid(y_grid, x_grid) 
-fig = plt.figure(figsize=(10, 7))
-ax = fig.add_subplot(111, projection='3d')
-ax.plot_surface(X, Y, z_avg_grid, cmap='terrain')
+    def process_chunk(self, chunk_idx: int) -> Tuple[np.ndarray, List[dict]]:
+        # Load the chunk data
+        x_coords, y_coords, elevation = self.load_chunk(chunk_idx)
+        
+        # Preprocess elevation data
+        smoothed = gaussian_filter(elevation, sigma=self.smoothing_sigma)
+        
+        # Calculate gradients
+        gradient_x = np.zeros_like(smoothed)
+        gradient_y = np.zeros_like(smoothed)
+        gradient_x[:, 1:-1] = smoothed[:, 2:] - smoothed[:, :-2]
+        gradient_y[1:-1, :] = smoothed[2:, :] - smoothed[:-2, :]
+        
+        # Compute gradient magnitude and detect edges
+        gradient_magnitude = np.sqrt(gradient_x**2 + gradient_y**2)
+        edge_map = (gradient_magnitude > self.height_threshold).astype(np.uint8)
+        
+        # Find objects
+        labeled_map, num_features = label(edge_map)
+        
+        # Extract object properties with enhanced coordinate information
+        objects = []
+        for i in range(1, num_features + 1):
+            object_mask = labeled_map == i
+            if np.sum(object_mask) >= 2:  # Minimum size threshold
+                # Get indices where this object exists
+                y_indices, x_indices = np.where(object_mask)
+                
+                # Store all coordinates that make up this object
+                object_coordinates = {
+                    # Get actual x,y coordinates for all points in the object
+                    'point_coordinates': [
+                        (x_coords[x], y_coords[y], elevation[y, x])
+                        for y, x in zip(y_indices, x_indices)
+                    ],
+                    
+                    # Store array indices for reference
+                    'array_indices': list(zip(y_indices, x_indices)),
+                    
+                    # Calculate perimeter points (points that have at least one non-object neighbor)
+                    'perimeter_coordinates': [
+                        (x_coords[x], y_coords[y])
+                        for y, x in zip(y_indices, x_indices)
+                        if any(
+                            0 <= y+dy < elevation.shape[0] and 
+                            0 <= x+dx < elevation.shape[1] and 
+                            labeled_map[y+dy, x+dx] != i
+                            for dy, dx in [(0,1), (1,0), (0,-1), (-1,0)]
+                        )
+                    ]
+                }
+                
+                # Calculate additional object properties
+                obj_props = {
+                    'id': f'chunk_{chunk_idx}_obj_{i}',
+                    'chunk_idx': chunk_idx,
+                    
+                    # Center point
+                    'center': (
+                        x_coords[int(np.mean(x_indices))],
+                        y_coords[int(np.mean(y_indices))]
+                    ),
+                    
+                    # Object size
+                    'size': np.sum(object_mask),
+                    
+                    # Height information
+                    'height_range': (
+                        np.min(elevation[object_mask]),
+                        np.max(elevation[object_mask])
+                    ),
+                    'mean_height': np.mean(elevation[object_mask]),
+                    
+                    # Spatial extent
+                    'x_extent': (
+                        x_coords[np.min(x_indices)],
+                        x_coords[np.max(x_indices)]
+                    ),
+                    'y_extent': (
+                        y_coords[np.min(y_indices)],
+                        y_coords[np.max(y_indices)]
+                    ),
+                    
+                    # Store all coordinate information
+                    'coordinates': object_coordinates
+                }
+                objects.append(obj_props)
+            else:
+                labeled_map[object_mask] = 0
+                
+        return labeled_map, objects
 
-ax.set_xlabel('X Coordinate')
-ax.set_ylabel('Y Coordinate')
-ax.set_zlabel('Height (Z)')
-plt.title('LiDAR 3D Surface Map')
-plt.show()
+    def print_object_details(self, objects: List[dict], max_points: int = 5) -> None:
 
-# Verify the size
-print(f"Reconstructed x_lidar size: {x_lidar.shape}")
-print(f"Reconstructed y_lidar size: {y_lidar.shape}")
-print(f"Reconstructed z_lidar size: {z_lidar.shape}")
+        for obj in objects:
+            print(f"\nObject {obj['id']}:")
+            print(f"  Center: ({obj['center'][0]:.2f}, {obj['center'][1]:.2f})")
+            print(f"  Size: {obj['size']} points")
+            print(f"  Height range: {obj['height_range'][0]:.2f}m to {obj['height_range'][1]:.2f}m")
+            print(f"  Mean height: {obj['mean_height']:.2f}m")
+            print(f"  X extent: {obj['x_extent'][0]:.2f} to {obj['x_extent'][1]:.2f}")
+            print(f"  Y extent: {obj['y_extent'][0]:.2f} to {obj['y_extent'][1]:.2f}")
+            
+            # Print first few point coordinates
+            print(f"  Sample points (first {max_points}):")
+            for x, y, z in obj['coordinates']['point_coordinates'][:max_points]:
+                print(f"    ({x:.2f}, {y:.2f}, {z:.2f})")
+            
+            # Print number of perimeter points
+            print(f"  Number of perimeter points: {len(obj['coordinates']['perimeter_coordinates'])}")
 
-X, Y = np.meshgrid(x_grid.squeeze(), y_grid.squeeze())
 
-# Flatten the mesh for interpolation
-grid_points = np.column_stack((X.ravel(), Y.ravel()))
-grid_heights = z_avg_grid.ravel()
+pipeline = LidarProcessingPipeline(
+    hdf5_file_path=r'D:\capstoneRoot\code\chunkedLIDAR\lidar_chunks.h5',
+    height_threshold=0.5,
+    smoothing_sigma=1.0)
+    
+    # Process and visualize a specific chunk
+chunk_idx = 1  # Process first chunk
+#pipeline.visualize_chunk(chunk_idx)
 
-# Interpolate to get the expected height for each lidar point
-z_expected = griddata(grid_points, grid_heights, (x_lidar, y_lidar), method='linear')
-
-# Handle NaNs from interpolation
-valid_mask = ~np.isnan(z_expected)
-diff = np.zeros_like(z_lidar)
-diff[valid_mask] = z_lidar[valid_mask] - z_expected[valid_mask]
-
-# Identify object points (above the surface by threshold)
-threshold = diff.mean() + 2 * diff.std()
-objects = diff > threshold
-object_points = np.column_stack((x_lidar[objects], y_lidar[objects], z_lidar[objects]))
-
-# Apply DBSCAN to find clusters (potential objects)
-clustering = DBSCAN(eps=1.5, min_samples=10).fit(object_points[:, :2])
-labels = clustering.labels_
-
-# Visualize Detected Objects
-fig = plt.figure(figsize=(12, 8))
-ax = fig.add_subplot(111, projection='3d')
-
-# All LiDAR points in gray for context
-ax.scatter(x_lidar, y_lidar, z_lidar, c='gray', s=1, alpha=0.3, label='LiDAR Points')
-
-# Clustered Objects in Color
-for cluster_id in np.unique(labels):
-    if cluster_id == -1:
-        color = 'black'  # Noise points
-    else:
-        color = plt.cm.tab10(cluster_id % 10)
-
-    cluster_points = object_points[labels == cluster_id]
-    ax.scatter(cluster_points[:, 0], cluster_points[:, 1], cluster_points[:, 2], c=[color], s=10, label=f'Object {cluster_id}')
-
-ax.set_xlabel('X Coordinate')
-ax.set_ylabel('Y Coordinate')
-ax.set_zlabel('Height (Z)')
-plt.title('3D Visualization of Detected Objects')
-plt.legend()
-plt.show()
+with open(r"D:\capstoneRoot\code\results\lidar.csv", mode="w", newline="") as file:
+    file.truncate(0)
+    writer = csv.writer(file)
+    for i in range(10):
+        map,objects = pipeline.process_chunk(i)
+        previousObject = (-10,-10)
+        for object in objects: 
+            cord = object['center']
+            if((previousObject[0]-cord[0]) < 1 and (previousObject[1]-cord[1]) < 1):
+                next
+            writer.writerow([cord[1],cord[0]])
+            previousObject = cord
+            
+            
