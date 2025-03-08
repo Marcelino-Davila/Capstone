@@ -4,6 +4,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
+rgbInfo = {}
+rgbInfo["width"] = 4096
+rgbInfo["height"] = 3000
+rgbInfo["pixelsPerMeter"] = 381
+rgbInfo["ActualWidth"] = 10.752
+rgbInfo[""]
 
 def detectTarget(imageIn,x,y,imageSizeX,imageSizeY):
     #image = removeShadow(imageIn)
@@ -33,8 +39,12 @@ def detectTarget(imageIn,x,y,imageSizeX,imageSizeY):
         target, confidence = colorCompare(avgWindowColor, background)
 
         if(target):
+
+            cv2.imshow("target",window)
+            cv2.waitKey()
             i+=1
             targets.append(i)
+            print("4")
         imWin.increment()
     print("i")
     if(len(targets)>0):
@@ -56,7 +66,7 @@ def colorCompare(image,window):
     lab1 = rgb2lab(np.array([[image]]) / 255.0)
     lab2 = rgb2lab(np.array([[window]]) / 255.0)
     difference = deltaE_ciede2000(lab1[0, 0], lab2[0, 0])
-    if(difference> 70):
+    if(difference> 40):
         target = True
     return (target, difference)
 
