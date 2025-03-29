@@ -5,6 +5,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
+
+
+width = 4096
+height = 3000
+    #width and height are swapped
+
+xSize = 3000
+ySize = 4096
+offset = 200
+xMin = int(xSize/2 - offset - 1)
+xMax = int(xMin + 2*offset)
+yMin = int(ySize/2 - offset - 1)
+yMax = int(yMin + 2*offset)
+
+
+
 def removeShadow(image: np.ndarray, clip_limit: float = 3.0, tile_grid_size: tuple = (8, 8)) -> np.ndarray:
     if image is None or not isinstance(image, np.ndarray):
         raise ValueError("Invalid image provided")
@@ -88,7 +104,13 @@ Idea 2: Remove images with just dirt
             results.append((image[1],image[2]))
 image = csv.reader(file)'''
 
-
+def detectionAlgorithm(image):
+    image = image[xMin:xMax,yMin:yMax]#bright
+    detection,objectColor = imageIsDirt(image)
+    if(detection): 
+        edges = windowEdgeDetection(image)
+    return checkEdges(image,edges,objectColor)
+    
 def imageIsDirt(image):
     #image = removeShadow(image)
     image = increase_saturation(image)
@@ -121,10 +143,25 @@ def imageIsDirt(image):
     bAverage = b/(2*offset*2*offset)
     
     if (rAverage/(gAverage+bAverage)) <0.40:
-        return 1
+        return True,(0,0,0)
     else:
-        return 0
+        return False,(rAverage,gAverage,bAverage)
+    
+def windowEdgeDetection(imageWindow):
+    pass
 
+def checkEdges(window,edges,objecColor):
+    pass
+
+width = 4096
+height = 3000
+    #width and height are swapped
+
+image = cv2.imread(r"D:\capstoneRoot\data\ASPIRE_forDistro\1 Downlooking\RGB\image_2931067656.png") 
+#image = image[xMin:xMax,yMin:yMax]
+cv2.imshow("random",image[xMin:xMax,yMin:yMax])
+cv2.imshow("random",image[yMin:yMax,xMin:xMax])
+cv2.waitKey()
 
 '''image = cv2.imread(r"D:\Capstone\data\ASPIRE_forDistro\1 Downlooking\RGB\image_2931067657.png") #bright
 print(imageIsDirt(image))
