@@ -1,5 +1,12 @@
 from skimage.color import deltaE_ciede2000, rgb2lab
 from skimage.exposure import adjust_gamma
+
+import matplotlib.pyplot as plt
+
+from skimage import filters
+from skimage.data import camera
+from skimage.util import compare_images
+
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -157,11 +164,11 @@ width = 4096
 height = 3000
     #width and height are swapped
 
-image = cv2.imread(r"D:\capstoneRoot\data\ASPIRE_forDistro\1 Downlooking\RGB\image_2931067656.png") 
+image = cv2.imread(r"D:\Capstone\data\ASPIRE_forDistro\1 Downlooking\RGB\image_2931067657.png") 
 #image = image[xMin:xMax,yMin:yMax]
-cv2.imshow("random",image[xMin:xMax,yMin:yMax])
-cv2.imshow("random",image[yMin:yMax,xMin:xMax])
-cv2.waitKey()
+#cv2.imshow("random",image[xMin:xMax,yMin:yMax])
+#cv2.imshow("random",image[yMin:yMax,xMin:xMax])
+#cv2.waitKey()
 
 '''image = cv2.imread(r"D:\Capstone\data\ASPIRE_forDistro\1 Downlooking\RGB\image_2931067657.png") #bright
 print(imageIsDirt(image))
@@ -196,4 +203,36 @@ print(imageIsDirt(image))
 
 timerend = time.time()
 print(timerend- timerstart)'''
+
+
+
+edge_roberts = filters.roberts(image[:, :, 0])
+#print(edge_roberts)
+#edge_roberts = edge_roberts + filters.roberts(image[:, :, 1])
+#edge_roberts = edge_roberts + filters.roberts(image[:, :, 2])
+
+
+image = image[:, :, 0]
+edge_sobel = filters.sobel(image)
+
+fig, axes = plt.subplots(ncols=2, sharex=True, sharey=True, figsize=(8, 4))
+
+image = cv2.imread(r"D:\Capstone\data\ASPIRE_forDistro\1 Downlooking\RGB\image_2931067657.png") 
+
+axes[0].imshow(edge_roberts, cmap=plt.cm.gray)
+#axes[0].imshow(image)
+axes[0].set_title('Roberts Edge Detection')
+
+axes[1].imshow(edge_sobel, cmap=plt.cm.gray)
+axes[1].set_title('Sobel Edge Detection')
+
+for ax in axes:
+    ax.axis('off')
+
+plt.tight_layout()
+plt.show()
+
+print("NEW LINE")
+#print(max(edge_roberts))
+print(edge_roberts[2500, 2500])
 
