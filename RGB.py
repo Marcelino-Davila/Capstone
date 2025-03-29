@@ -4,73 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-rgbInfo = {}
-rgbInfo["width"] = 4096
-rgbInfo["height"] = 3000
-rgbInfo["pixelsPerMeter"] = 381
-rgbInfo["ActualWidth"] = 10.752
-rgbInfo[""]
-
-def detectTarget(imageIn,x,y,imageSizeX,imageSizeY):
-    #image = removeShadow(imageIn)
-    image = imageIn
-    imWin = Window(x,y,imageSizeX,imageSizeY)
-    i=0
-    targets = []
-    windowNumber = 0
-    while (imWin.scanning):
-        windowNumber+=1
-        window = image[imWin.y1:imWin.y2,imWin.x1:imWin.x2] 
-        avgWindowColor = cv2.mean(window)[:3]
-        SX1 = imWin.x1 - 200
-        SX2 = imWin.x2 + 200
-        SY1 = imWin.y1 - 200
-        SY2 = imWin.y2 + 200
-        if(SX1 < 0):
-            SX1 = 0
-        if(SX2 > imageSizeX):
-            SX2 = imageSizeX
-        if(SY1 < 0):
-            SY1 = 0
-        if(SY2 > imageSizeY):
-            SY2 = imageSizeY
-        surroundingWindow = image[SY1:SY2,SX1:SX2]
-        background = back(surroundingWindow,imWin.x1,imWin.x2,imWin.y1,imWin.y2,SX2-imWin.x2,SY2-imWin.y2)
-        target, confidence = colorCompare(avgWindowColor, background)
-
-        if(target):
-
-            cv2.imshow("target",window)
-            cv2.waitKey()
-            i+=1
-            targets.append(i)
-            print("4")
-        imWin.increment()
-    print("i")
-    if(len(targets)>0):
-        return True
-    return False
-
-def back(background,x1,x2,y1,y2,imgx,imgy):
-    top = cv2.mean(background[0:y1,x1:x2])
-    left = cv2.mean(background[0:imgy,0:x1])
-    bottom = cv2.mean(background[y2:imgy,x1:x2])
-    right = cv2.mean(background[0:imgy,x2:imgx])
-    average = [(top[0] + left[0] + bottom[0] + right[0])/4,
-               (top[1] + left[1] + bottom[1] + right[1])/4,
-               (top[2] + left[2] + bottom[2] + right[2])/4]
-    return average
-    
-def colorCompare(image,window):
-    target = False
-    lab1 = rgb2lab(np.array([[image]]) / 255.0)
-    lab2 = rgb2lab(np.array([[window]]) / 255.0)
-    difference = deltaE_ciede2000(lab1[0, 0], lab2[0, 0])
-    if(difference> 40):
-        target = True
-    return (target, difference)
-
-
 def removeShadow(image: np.ndarray, clip_limit: float = 3.0, tile_grid_size: tuple = (8, 8)) -> np.ndarray:
     if image is None or not isinstance(image, np.ndarray):
         raise ValueError("Invalid image provided")
@@ -88,27 +21,49 @@ def removeShadow(image: np.ndarray, clip_limit: float = 3.0, tile_grid_size: tup
     return cv2.cvtColor(lab_enhanced, cv2.COLOR_LAB2BGR)
 
 
-        
-class Window:
-    def __init__(self,x,y,imageSizeX,imageSizeY):
-        self.x1 = 0
-        self.y1 = 0
-        self.x2 = x
-        self.y2 = y
-        self.xInc = x
-        self.yInc = y
-        self.imageSizeX = imageSizeX
-        self.imageSizeY = imageSizeY
-        self.scanning = True
+def increase_saturation(image, factor=1.5):
+    # Convert image to HSV
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    
+    # Extract the saturation channel
+    h, s, v = cv2.split(hsv)
+    
+    # Increase saturation, ensuring it doesn't exceed 255
+    s = np.clip(s * factor, 0, 255).astype(np.uint8)
+    
+    # Merge channels back and convert to BGR
+    hsv_enhanced = cv2.merge([h, s, v])
+    enhanced_image = cv2.cvtColor(hsv_enhanced, cv2.COLOR_HSV2BGR)
+    
+    return enhanced_image
 
-    def increment(self):
-        if (self.x2 >= self.imageSizeX and self.y2 >= self.imageSizeY):
-            self.scanning = False
-        if (self.x2 >= self.imageSizeX):
-            self.y1 += self.yInc
-            self.y2 += self.yInc
-            self.x1 = 0
-            self.x2 = self.xInc
-        self.x1 += self.xInc
-        self.x2 += self.xInc
+rgbInfo = {}
+rgbInfo["width"] = 4096
+rgbInfo["height"] = 3000
+rgbInfo["pixelsPerMeter"] = 381
+rgbInfo["ActualWidth"] = 10.752
 
+RGBWindow = [(4096/2-50,3000/2+50),(4096/2+50,3000/2-50)]
+LWIRWindow = [(640/2-50,512/2+50),(640/2+50,512/2-50)]
+
+RGBDefault = [] 
+LWIRDefault = []
+
+
+def detectTarget(imageIn,type):
+    if type == "RGB":
+        window = RGBWindow
+        default = RGBDefault
+    else:
+        window = LWIRWindow
+        default = LWIRDefault
+
+    
+def colorCompare(image,window):
+    target = False
+    lab1 = rgb2lab(np.array([[image]]) / 255.0)
+    lab2 = rgb2lab(np.array([[window]]) / 255.0)
+    difference = deltaE_ciede2000(lab1[0, 0], lab2[0, 0])
+    if(difference> 50):
+        target = True
+    return (target, difference)
