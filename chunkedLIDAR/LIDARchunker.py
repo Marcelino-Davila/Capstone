@@ -72,8 +72,8 @@ def chunk_matlab_lidar_by_coordinates(matlab_file, output_file, x_ranges, y_rang
             for x_idx, (x_min, x_max) in enumerate(x_ranges):
                 # Find points within this chunk
                 mask = (
-                    (x_lidar >= x_min) & (x_lidar < x_max) &
-                    (y_lidar >= y_min) & (y_lidar < y_max)
+                    (x_lidar >= x_min) & (x_lidar <= x_max) &
+                    (y_lidar >= y_min) & (y_lidar <= y_max)
                 )
                 
                 # Get points in this chunk
