@@ -44,6 +44,7 @@ def visualize_clusters(pcd):
 h5_file = r"D:\capstoneRoot\code\chunkedLIDAR\lidar_chunks.h5"
 chunk_y, chunk_x = 5, 6  # Select chunk
 points = load_lidar_chunk(h5_file, chunk_y, chunk_x)
+visualize_clusters(points)
 
 if points is not None:
     clustered_pcd, labels = dbscan_clustering(points, eps=1.0, min_points=15)
