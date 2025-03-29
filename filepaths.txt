@@ -1,0 +1,6 @@
+A:\bombproject\data\ASPIRE_forDistro\0 Ground Truth
+A:\bombproject\data\ASPIRE_forDistro\1 Downlooking\LWIR
+A:\bombproject\data\ASPIRE_forDistro\1 Downlooking\RGB
+A:\bombproject\data\ASPIRE_forDistro\2 Sidelooking\LWIR
+A:\bombproject\data\ASPIRE_forDistro\2 Sidelooking\RGB
+A:\bombproject\data\ASPIRE_forDistro\3 LIDAR

@@ -5,7 +5,7 @@ import math
 from scipy.io import loadmat
 
 
-chunk_boundaries_x = [(-1.5,-0.5,), (-0.5,1.5,), (1.5,2.5,), (3.5,4.5,),
+chunk_boundaries_x = [(-1.5,-0.5,), (-0.5,1.5,), (1.5,2.5,),(2.5, 3.5,) ,(3.5,4.5,),
                       (4.5,5.5,), (5.5,6.5,), (6.5,7.5,), (7.5,8.5,),
                       (8.5,9.5,), (9.5,10.5,), (10.5,11.5,), (11.5,12.5,),
                       (12.5,13.5,), (13.5,14.5,), (14.5,15.5,), (15.5,16.5,), 
@@ -234,8 +234,8 @@ def read_points_by_coordinates(h5_file, x_min, x_max, y_min, y_max):
         return np.array([]), np.array([]), np.array([])
 
 # Example usage
-matlab_file = r"D:\capstoneRoot\data\ASPIRE_forDistro\3 LIDAR\lidar_point_cloud_2024_07_31.mat"
-output_file = r"D:\capstoneRoot\code\chunkedLIDAR\lidar_chunks.h5"
+matlab_file = r"A:\bombproject\data\ASPIRE_forDistro\3 LIDAR\lidar_point_cloud_2024_07_31.mat"
+output_file = r"A:\bombproject\code\chunkedLIDAR.h5"
 # Chunk and save the data
 chunk_matlab_lidar_by_coordinates(
     matlab_file,
