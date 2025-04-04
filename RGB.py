@@ -112,12 +112,37 @@ Idea 2: Remove images with just dirt
 image = csv.reader(file)'''
 
 def detectionAlgorithm(image):
-    image = image[xMin:xMax,yMin:yMax]#bright
+    #need to limit windowSize
+    #image = image[xMin:xMax,yMin:yMax]
+    [detection, newImage, colorAverage] = imageIsDirt(image)
+
+    if(detection):
+        edge_detected = windowEdgeDetection(newImage)
+        checkEdges(newImage, edge_detected, colorAverage)
+    #print(edge_detected)
+    
+
+    
+    return 10 #arbitrary return
+    
+    '''image = image[xMin:xMax,yMin:yMax]#bright
     detection,objectColor = imageIsDirt(image)
     if(detection): 
         edges = windowEdgeDetection(image)
-    return checkEdges(image,edges,objectColor)
+    return checkEdges(image,edges,objectColor)'''
     
+def colorAverage(image):
+    for i in range(xMin, xMax):
+        for j in range(yMin, yMax):
+            x = image[i, j]
+            r = r + x[0]
+            g = g + x[1]
+            b = b + x[2]
+    rAverage = r/(2*offset*2*offset)
+    gAverage = g/(2*offset*2*offset)
+    bAverage = b/(2*offset*2*offset)
+    return rAverage/(gAverage+bAverage)
+
 def imageIsDirt(image):
     #image = removeShadow(image)
     image = increase_saturation(image)
@@ -149,26 +174,74 @@ def imageIsDirt(image):
     gAverage = g/(2*offset*2*offset)
     bAverage = b/(2*offset*2*offset)
     
-    if (rAverage/(gAverage+bAverage)) <0.40:
-        return True,(0,0,0)
+    if (rAverage/(gAverage+bAverage)) < 0.40:
+        return False, image, 0 #(0,0,0)
     else:
-        return False,(rAverage,gAverage,bAverage)
+        return True, image, rAverage/(gAverage+bAverage) #(rAverage,gAverage,bAverage)
     
-def windowEdgeDetection(imageWindow):
-    pass
+def windowEdgeDetection(image):
+    edge_roberts = filters.roberts(image[:, :, 0])
+    edge_roberts = edge_roberts + filters.roberts(image[:, :, 1])
+    edge_roberts = edge_roberts + filters.roberts(image[:, :, 2])
 
-def checkEdges(window,edges,objecColor):
-    pass
+    '''print("NEW LINE")
+    print(np.max(edge_roberts))
+    print(edge_roberts[2500, 2500])'''
 
-width = 4096
-height = 3000
-    #width and height are swapped
+    edge_detected = []
+    for i in range(xMin, xMax):
+        for j in range(yMin, yMax):
+            if (edge_roberts[i, j] > 1): #was originally 0.4 but had to many points
+                #print(i, j)
+                edge_detected.append((i, j))
+    #print(np.max(edge_roberts))
+    return edge_detected
 
-image = cv2.imread(r"D:\Capstone\data\ASPIRE_forDistro\1 Downlooking\RGB\image_2931067657.png") 
-#image = image[xMin:xMax,yMin:yMax]
-#cv2.imshow("random",image[xMin:xMax,yMin:yMax])
-#cv2.imshow("random",image[yMin:yMax,xMin:xMax])
-#cv2.waitKey()
+def checkEdges(image, edges, average):
+    objectDetected = []
+
+    #print(len(edges))
+    #print(range(len(edges)-1))
+    
+    #filter edges (not functional)
+    '''for i in range(len(edges)-10):
+        #print(i)
+        cord1 = edges[i]
+        xCord1 = cord1[0]
+        yCord1 = cord1[1]
+        cord2 = edges[i+1]
+        #print(i+1)
+        xCord2 = cord2[0]
+        yCord2 = cord2[1]
+        if ( xCord1 > (xCord2-offset/20) and xCord1 < (xCord2+offset/20) and yCord1 > (yCord2-offset/20) and yCord1 < (yCord2 +offset/20)):
+            #<x1<x2+offset/20): #and y2-offset/20<y1<y2+offset/20):
+            x = (0,0)
+            edges[i] = x
+    print(len(edges))'''
+    
+
+    for i in range(len(edges)):
+        cord = edges[i]
+        xCord = cord[0]
+        yCord = cord[1]
+        
+        for j in range(10):
+            
+            for k in range(10):
+                newAverage = image[xCord - 10 + j, yCord -10 + k, 0]/ (image[xCord - 10 + j, yCord -10 + k, 1] + image[xCord - 10 + j, yCord -10 + k, 2])
+                #print(newAverage)
+                if (newAverage >  6*average):
+                    objectDetected.append((i, j))
+                    break
+            if (newAverage > 6*average):
+               break
+        #print(newAverage)
+    #print(objectDetected)
+    #print("current average", average)
+    print("previous # of edges detected", len(edges))
+    print("current # of edges detected", len(objectDetected))
+    return objectDetected
+
 
 '''image = cv2.imread(r"D:\Capstone\data\ASPIRE_forDistro\1 Downlooking\RGB\image_2931067657.png") #bright
 print(imageIsDirt(image))
@@ -204,35 +277,7 @@ print(imageIsDirt(image))
 timerend = time.time()
 print(timerend- timerstart)'''
 
-
-
-edge_roberts = filters.roberts(image[:, :, 0])
-#print(edge_roberts)
-#edge_roberts = edge_roberts + filters.roberts(image[:, :, 1])
-#edge_roberts = edge_roberts + filters.roberts(image[:, :, 2])
-
-
-image = image[:, :, 0]
-edge_sobel = filters.sobel(image)
-
-fig, axes = plt.subplots(ncols=2, sharex=True, sharey=True, figsize=(8, 4))
-
-image = cv2.imread(r"D:\Capstone\data\ASPIRE_forDistro\1 Downlooking\RGB\image_2931067657.png") 
-
-axes[0].imshow(edge_roberts, cmap=plt.cm.gray)
-#axes[0].imshow(image)
-axes[0].set_title('Roberts Edge Detection')
-
-axes[1].imshow(edge_sobel, cmap=plt.cm.gray)
-axes[1].set_title('Sobel Edge Detection')
-
-for ax in axes:
-    ax.axis('off')
-
-plt.tight_layout()
-plt.show()
-
-print("NEW LINE")
-#print(max(edge_roberts))
-print(edge_roberts[2500, 2500])
+image = cv2.imread(r"D:\Capstone\data\ASPIRE_forDistro\1 Downlooking\RGB\image_2931067657.png")
+image = cv2.imread(r"D:\Capstone\data\ASPIRE_forDistro\1 Downlooking\RGB\image_2931072618.png") #plastic bottle
+x = detectionAlgorithm(image)
 
