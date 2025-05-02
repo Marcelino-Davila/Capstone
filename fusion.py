@@ -42,7 +42,8 @@ def plot_grouped_fused_results(grouped_results):
 
         # Optional: draw group center
         plt.plot(group_center_x, group_center_y, 'ko', markersize=5)
-        plt.plot(groundTruthx,groundTruthy,'r',markersize=3)
+        for x, y in zip(groundTruthx, groundTruthy):
+                plt.plot(x, y, marker='x', color='red', markersize=10, markeredgewidth=2)
 
     plt.xlabel("X Position (meters)")
     plt.ylabel("Y Position (meters)")

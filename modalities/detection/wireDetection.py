@@ -9,9 +9,9 @@ def detect_wires(
     threshold=0.07,
     color_space="rgb",
     morph_size=1,
-    min_contour_area=.2,
+    min_contour_area=.1,
     output_dir="output",
-    debug=True
+    debug=False
 ):
     # Create output directory if it doesn't exist
     Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -76,28 +76,31 @@ def detect_wires(
     contours, _ = cv2.findContours(mask_cleaned, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
     # Filter contours by area
+    true_contours = 0
     valid_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > min_contour_area]
-     
-    # Create a visualization of the results
-    highlighted = img_rgb.copy()
+    for i, contour in enumerate(valid_contours):
+        # Get the bounding rectangle of the contour
+        x, y, w, h = cv2.boundingRect(contour)
+        if ((y < 1700) and (y > 1300)):
+            true_contours += 1
+    if debug:
+        # Create a visualization of the results
+        highlighted = img_rgb.copy()
+        
+        # Draw valid contours with a green outline
+        cv2.drawContours(highlighted, valid_contours, -1, (0, 255, 0), 2)
+        
+        # Highlight the detected wire pixels in red
+        mask_bool = mask_cleaned > 0
+        highlighted[mask_bool] = [255, 0, 0]  # Red for wire pixels
+        
+        # Save the result
+        highlighted_bgr = cv2.cvtColor(highlighted, cv2.COLOR_RGB2BGR)
+        result_path = f"{output_dir}/highlighted_wires.jpg"
+        cv2.imwrite(result_path, highlighted_bgr)
+        
+        print(f"Found {len(valid_contours)} wire segments. Result saved to {result_path}")
     
-    # Draw valid contours with a green outline
-    cv2.drawContours(highlighted, valid_contours, -1, (0, 255, 0), 2)
-    
-    # Highlight the detected wire pixels in red
-    mask_bool = mask_cleaned > 0
-    highlighted[mask_bool] = [255, 0, 0]  # Red for wire pixels
-    
-    # Save the result
-    highlighted_bgr = cv2.cvtColor(highlighted, cv2.COLOR_RGB2BGR)
-    result_path = f"{output_dir}/highlighted_wires.jpg"
-    cv2.imwrite(result_path, highlighted_bgr)
-    
-    print(f"Found {len(valid_contours)} wire segments. Result saved to {result_path}")
-    
-    return highlighted, mask_cleaned, valid_contours
-
-
-
-image_path = r'D:\capstoneRoot\data\ASPIRE_forDistro\1 Downlooking\RGB\image_2931078138.png'
-detect_wires(image_path)
+    if true_contours > 10:
+        return True
+    return False

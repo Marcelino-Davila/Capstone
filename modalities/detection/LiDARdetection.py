@@ -266,17 +266,3 @@ def make_tile_points(points, tile_size, overlap):
             if tile.size > 0:
                 tiles.append((tile, (x0, y0)))
     return tiles
-
-# === RUN ===
-if __name__ == "__main__":
-    las_file = "output_lidar.las"
-    
-    # Choose one of the processing methods:
-    
-    # 1. For standard files (whole file loaded at once)
-    clusters = stream_process_efficient(las_file)
-    print(clusters)
-        
-        # Debug visualization for a small region
-        # Region format is (min_x, min_y, max_x, max_y)
-        # visualize_height_map(las_file, region=None, resolution=grid_res)
