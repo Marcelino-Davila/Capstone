@@ -1,8 +1,0 @@
-D:\capstoneRoot\data\ASPIRE_forDistro\0 Ground Truth 
-D:\capstoneRoot\data\ASPIRE_forDistro\1 Downlooking\LWIR
-D:\capstoneRoot\data\ASPIRE_forDistro\1 Downlooking\RGB
-D:\capstoneRoot\data\ASPIRE_forDistro\2 Sidelooking\LWIR
-D:\capstoneRoot\data\ASPIRE_forDistro\2 Sidelooking\RGB
-D:\capstoneRoot\data\ASPIRE_forDistro\3 LIDAR
-D:\capstoneRoot\data\ASPIRE_forDistro\1 Downlooking
-D:\capstoneRoot\data\ASPIRE_forDistro\2 Sidelooking
