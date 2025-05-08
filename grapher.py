@@ -18,7 +18,6 @@ def plot_all_modalities(json_path):
         "visualObjectSide": "cyan",
         "hotObjectsDown": "orange",
         "hotObjectsSide": "purple",
-        "linearObjectDown": "pink",
     }
 
     # ---- RADAR ----

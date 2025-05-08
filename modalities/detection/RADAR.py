@@ -5,7 +5,7 @@ from sklearn.cluster import DBSCAN
 def radarDetection(x_range,y_range):
     print("RADAR")
     # Load the .mat file
-    data = loadmat(r"D:\capstoneRoot\data\ASPIRE_forDistro\1 Downlooking\2024_07_31_aspire_3d_sar_img_hanning.mat")
+    data = loadmat(r"data\ASPIRE_forDistro\1 Downlooking\2024_07_31_aspire_3d_sar_img_hanning.mat")
     img_hh = data['img_hh']
     x_img = data['x_img'].squeeze()
     y_img = data['y_img'].squeeze()

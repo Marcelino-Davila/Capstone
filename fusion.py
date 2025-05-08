@@ -12,44 +12,55 @@ groundTruthy = [11.5,11.5,9.6,
                 5.05,3.04,2.8
                 ,9.89,11.8]
 
-
 def plot_grouped_fused_results(grouped_results):
-    plt.figure(figsize=(10, 8))
+    plt.figure(figsize=(12, 10))
+    ax = plt.gca()
+
+    used_labels = set()
 
     for i, group in enumerate(grouped_results):
         if not group:
             continue
 
-        # Use first detection as group center (you can also average positions)
         group_center_x = group[0]["x"]
         group_center_y = group[0]["y"]
         group_radius = group[0].get("radius_2d", 1.0)
         group_match = any(entry["match"] for entry in group)
 
-        # Circle color based on match status
         color = 'green' if group_match else 'red'
-        alpha = 0.3 if group_match else 0.2
+        alpha = 0.4 if group_match else 0.25
+        label = "Match" if group_match else "No Match"
+        label = label if label not in used_labels else None  # Avoid duplicate legend entries
+        if label:
+            used_labels.add(label)
 
-        # Draw filled circle
+        # Draw detection radius
         circle = Circle(
             (group_center_x, group_center_y),
             radius=group_radius,
-            color=color,
+            facecolor=color,
+            edgecolor='black',
             alpha=alpha,
-            edgecolor='black'
+            label=label
         )
-        plt.gca().add_patch(circle)
+        ax.add_patch(circle)
 
-        # Optional: draw group center
-        plt.plot(group_center_x, group_center_y, 'ko', markersize=5)
-        for x, y in zip(groundTruthx, groundTruthy):
-                plt.plot(x, y, marker='x', color='red', markersize=10, markeredgewidth=2)
+        # Group center point
+        ax.plot(group_center_x, group_center_y, 'ko', markersize=5, label="Group Center" if "Group Center" not in used_labels else None)
+        used_labels.add("Group Center")
 
-    plt.xlabel("X Position (meters)")
-    plt.ylabel("Y Position (meters)")
-    plt.title("Grouped Fused Detections with Radar Radius")
-    plt.grid(True)
-    plt.axis("equal")
+        # Optional: Group ID text
+        ax.text(group_center_x, group_center_y + 0.15, f"G{i+1}", fontsize=8, ha='center', va='bottom')
+
+    # Plot ground truth points
+    ax.plot(groundTruthx, groundTruthy, 'x', color='blue', markersize=10, markeredgewidth=2, label="Ground Truth")
+
+    ax.set_xlabel("X Position (meters)")
+    ax.set_ylabel("Y Position (meters)")
+    ax.set_title("Grouped Fused Detections with Radar Radius")
+    ax.axis("equal")
+    ax.grid(True)
+    ax.legend(loc='upper right')
     plt.tight_layout()
     plt.show()
 
@@ -68,11 +79,7 @@ def load_lidar_z_map(laz_path, resolution=0.25):
 
     return z_map
 
-with open(r"code\scan_results\scan_result.json", "r") as f:
-    detection_data = json.load(f)
 
-radar_detections = detection_data["electronicDevices"]
-rgb_detections = detection_data.get("visibleObjectDown", []) + detection_data.get("visibleObjectSide", [])
 
 def is_rgb_nearby(radar_x, radar_y, rgb_data, threshold=0.25):
     for detection_list in rgb_data:
@@ -142,15 +149,21 @@ def group_fused_results(fused_results, eps=1.0):
 
     return list(grouped.values())
 
-lidar_map = load_lidar_z_map(r"code\output_lidar.las")
-fused = run_fusion(detection_data, lidar_map)
+def fuseMods():
+    with open(r"code\scan_results\scan_result.json", "r") as f:
+        detection_data = json.load(f)
 
-grouped_fused = group_fused_results(fused)
+    radar_detections = detection_data["electronicDevices"]
+    rgb_detections = detection_data.get("visibleObjectDown", []) + detection_data.get("visibleObjectSide", [])
 
-for i, group in enumerate(grouped_fused):
-    print(f"\n🧩 Group {i+1} ({len(group)} detections):")
-    for entry in group:
-        status = "✅ Match" if entry["match"] else "❌ No match"
-        print(f" - ({entry['description']}: {entry['x']:.2f}, {entry['y']:.2f}) | z_radar={entry['z_radar']:.2f} | {status}")
 
-plot_grouped_fused_results(grouped_fused)
+    lidar_map = load_lidar_z_map(r"code\output_lidar.las")
+    fused = run_fusion(detection_data, lidar_map)
+
+    grouped_fused = group_fused_results(fused)
+
+    for i, group in enumerate(grouped_fused):
+        for entry in group:
+            status = "Match" if entry["match"] else "No match"
+
+    plot_grouped_fused_results(grouped_fused)
